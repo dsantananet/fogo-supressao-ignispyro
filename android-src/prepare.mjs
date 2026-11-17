@@ -25,7 +25,12 @@ writeFileSync(`${res}/mipmap-anydpi-v26/fogo_launcher.xml`, `<?xml version="1.0"
 `);
 
 const manifest = `${main}/AndroidManifest.xml`;
-writeFileSync(manifest, readFileSync(manifest, 'utf8')
+const manifestXml = readFileSync(manifest, 'utf8');
+const locationPermissions = manifestXml.includes('android.permission.ACCESS_FINE_LOCATION') ? '' :
+  '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n' +
+  '    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n';
+writeFileSync(manifest, manifestXml
+  .replace('</manifest>', locationPermissions + '</manifest>')
   .replace('android:allowBackup="true"', 'android:allowBackup="false"')
   .replaceAll(/@mipmap\/ic_launcher(?:_round)?/g, '@mipmap/fogo_launcher'));
 

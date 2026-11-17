@@ -72,7 +72,7 @@ async function readSuppressionWorkbook(file) {
   }
 
   const headers = rows.find(row => row.getAttribute('r') === '3');
-  if (!suppHeaders.every((header, index) => value(headers, index).trim().startsWith(header))) {
+  if (!suppHeaders.every((header, index) => value(headers, index).trim().replace(/\s+/g, ' ').startsWith(header))) {
     throw new Error('As colunas A–S não correspondem ao modelo de Fogo de Supressão.');
   }
   const records = rows.filter(row => +row.getAttribute('r') > 3 && value(row, 2).trim()).map(row => ({
@@ -108,15 +108,45 @@ function rowToSuppression(record) {
 }
 
 function suppressionValues(record) {
+  const summaries = Object.fromEntries(fieldCollections.map(([name, title, , definitions]) => {
+    const details = (record[name] ?? []).map(item => definitions.map(([field, label]) =>
+      item[field] && label + ': ' + item[field]).filter(Boolean).join(', ')).filter(Boolean);
+    return [name, details.length ? title + ': ' + details.join(' | ') : ''];
+  }));
+  const photoReferences = record.photos.map(photo =>
+    [photo.reference || photo.name, photo.time, photo.latitude, photo.longitude].filter(Boolean).join(' · ')).filter(Boolean);
   const notes = [record.notes, record.means && 'Meios: ' + record.means,
     record.ignition && 'Tipo de ignição: ' + record.ignition,
     record.spotting && 'Saltos: ' + record.spotting,
+    record.terrain && 'Terreno: ' + record.terrain,
+    record.fireHistory && 'Histórico de incêndios: ' + record.fireHistory,
+    record.weather && 'Meteorologia: ' + record.weather,
+    record.fire && 'Comportamento observado: ' + record.fire,
+    record.chronology && 'Cronologia: ' + record.chronology,
+    record.result && 'Resultado: ' + record.result,
+    summaries.meteorology, summaries.resources,
+    photoReferences.length && 'Fotografias: ' + photoReferences.join(' | '),
     record.sectors.length && 'Setores: ' + record.sectors.map(s => [s.name, s.activity].filter(Boolean).join(' — ')).join(' | ')
   ].filter(Boolean).join('\n');
+  const personnel = [record.personnel, summaries.teams, summaries.technicians].filter(Boolean).join('\n');
   return [record.book, record.page ? Number(record.page) : '', record.occurrence, record.location,
     record.parish, record.town, record.district, record.action, excelDate(record.date), excelTime(record.start),
     excelTime(record.end), operationsDuration(record.start, record.end), record.purpose, record.vegetation,
-    record.length ? Number(record.length) : '', record.authorization, record.timeline, record.personnel, notes];
+    record.length ? Number(record.length) : '', record.authorization, record.timeline, personnel, notes];
+}
+
+function suppressionCsv(record) {
+  const values = suppressionValues(record);
+  const duration = values[11] === '' ? '' : Math.round(values[11] * 1440);
+  values.splice(8, 4, record.date, record.start, record.end,
+    duration === '' ? '' : String(Math.floor(duration / 60)).padStart(2, '0') + ':' +
+      String(duration % 60).padStart(2, '0'));
+  const cell = value => {
+    const text = String(value ?? '');
+    const safe = typeof value === 'string' && /^\s*[=+\-@\t\r\n]/.test(text) ? "'" + text : text;
+    return '"' + safe.replaceAll('"', '""') + '"';
+  };
+  return '\ufeff' + [suppHeaders, values].map(row => row.map(cell).join(';')).join('\r\n') + '\r\n';
 }
 
 async function saveSuppressionWorkbook(file, record) {
@@ -124,8 +154,8 @@ async function saveSuppressionWorkbook(file, record) {
   const matches = book.records.filter(item => item.values[2].trim() === record.occurrence.trim() &&
     fromExcelDate(item.values[8]) === record.date && fromExcelTime(item.values[9]) === record.start);
   if (matches.length > 1) throw new Error('Há mais de uma linha com esta ocorrência, data e hora. Revê o livro.');
-  const lastRecord = book.records.at(-1)?.row ?? 4;
-  const target = matches[0]?.row ?? lastRecord + 1;
+  const lastRecord = book.records.at(-1)?.row;
+  const target = matches[0]?.row ?? (lastRecord ?? 3) + 1;
   const row = book.rows.find(item => +item.getAttribute('r') === target) ??
     book.xml.createElementNS(sheetNS, 'row');
   if (!row.parentNode) {
@@ -134,9 +164,12 @@ async function saveSuppressionWorkbook(file, record) {
     book.data.insertBefore(row, next ?? null);
   }
 
-  const styleRow = book.rows.find(item => +item.getAttribute('r') === lastRecord);
+  const styleRow = book.rows.find(item => +item.getAttribute('r') === (lastRecord ?? 4));
   suppressionValues(record).forEach((value, index) => {
     if (value === '') return;
+    if (typeof value === 'string' && value.length > 32767) {
+      throw new Error('O campo «' + suppHeaders[index] + '» ultrapassa o limite de uma célula Excel. Exporta também o CSV.');
+    }
     const item = book.xml.createElementNS(sheetNS, 'c');
     const previous = book.cell(row, index);
     if (previous?.getElementsByTagNameNS(sheetNS, 'f').length) return;

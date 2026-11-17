@@ -33,7 +33,7 @@ button {
   background: white;
   font-weight: 700;
 }
-button[aria-current], #saveCase, #newCase, #printReport {
+button[aria-current], #saveCase, #newCase, #exportExcel {
   background: var(--red);
   color: white;
   border-color: var(--red);
@@ -75,6 +75,7 @@ textarea { min-height: 78px; resize: vertical; }
 .archive-row, .update { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
 .photo img { width: 100%; height: 150px; object-fit: contain; background: #faf1f1; }
 .photo label, .photo button, .sector button { margin-top: 8px; }
+#map { display: block; width: 100%; max-width: 640px; height: auto; background: #f8edef; border: 1px solid var(--line); }
 #feedback { color: #7f2330; min-height: 1.6rem; padding-top: 4px; }
 footer { text-align: center; color: #66323a; font-size: .84rem; padding: 18px; }
 @media (max-width: 620px) {

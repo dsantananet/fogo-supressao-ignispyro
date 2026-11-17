@@ -2,10 +2,11 @@
 
 Aplicação de registo documental de ocorrências, manobras de fogo de supressão, setores e fotografias.
 
-- Regista a equipa, autorização do COS, fita do tempo, horários, meios e efeitos observados.
-- Em **Relatório e Excel**, seleciona o teu livro de registo, pré-preenche a ficha a partir de uma linha existente e grava uma cópia preenchida. A folha Folha1 deve usar as colunas A–S do modelo de supressão.
-- Associa fotografias a setores. A ficha gera um relatório de impressão/PDF com os dados e as legendas.
-- Guarda e reabre ocorrências localmente. A cópia JSON inclui o histórico e as fotografias. O APK público abre com o histórico vazio.
+- Em **Relatório e Excel**, seleciona uma vez o modelo original `Modelo_BD_ Fogo_Supressão.xlsx` ou um livro existente do mesmo formato. O livro fica disponível offline. Podes pré-preencher a ficha a partir de uma linha existente.
+- **Exportar Excel no modelo de supressão** cria uma cópia do livro preenchida nas colunas A–S de **Folha1**. Também podes exportar o registo em CSV e imprimir a ficha complementar com fotografias.
+- Em **Operações e mapa**, regista séries meteorológicas, equipas, funções, credenciações e meios. Importa ou exporta KML, edita vértices e consulta o esboço offline. São aceites pontos, linhas e polígonos sem anéis interiores. As coordenadas são WGS84 (longitude,latitude).
+- O botão **Tirar fotografia** regista a hora no regresso da câmara e tenta obter uma posição GPS. Nas fotografias importadas, preenche a hora e a posição disponíveis na fonte. Cada imagem pode ter uma referência e estar ligada a um setor.
+- Em **Histórico**, guarda uma cópia JSON e escolhe o Google Drive no seletor Android quando o fornecedor estiver disponível. Para sincronização manual, recolhe a cópia no outro aparelho e usa **Recolher e juntar registos de uma cópia**. Versões em conflito são preservadas separadamente. A cópia inclui a ficha, o histórico e as fotografias. Seleciona o modelo Excel em cada aparelho.
 
 Utiliza a secção [Releases](https://github.com/dsantananet/fogo-supressao-ignispyro/releases) para instalação no Android.
 Consulta [BUILD_ANDROID.md](BUILD_ANDROID.md) para compilar.

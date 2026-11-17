@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="style.css">
   <script defer src="zip.js"></script>
   <script defer src="excel.js"></script>
+  <script defer src="fieldwork.js"></script>
   <script defer src="app.js"></script>
   <script defer src="updates.js"></script>
 </head>
@@ -24,6 +25,7 @@
       <button type="button" aria-current="page" data-page="history">Histórico</button>
       <button type="button" data-page="case">Ocorrência</button>
       <button type="button" data-page="sectors">Setores e fotografias</button>
+      <button type="button" data-page="fieldwork">Operações e mapa</button>
       <button type="button" data-page="report">Relatório e Excel</button>
     </nav>
     <div id="feedback" role="status" aria-live="polite"></div>
@@ -31,8 +33,9 @@
       <h1>Ocorrências arquivadas</h1>
       <div class="actions">
         <button type="button" id="newCase">Nova ocorrência</button>
-        <button type="button" id="backup">Exportar cópia JSON</button>
-        <label class="file">Importar cópia JSON <input id="restore" type="file" accept=".json,application/json"></label>
+        <button type="button" id="backup">Guardar cópia no Drive ou no aparelho</button>
+        <label class="file">Recolher e juntar registos de uma cópia <input id="merge" type="file" accept=".json,application/json"></label>
+        <label class="file">Restaurar cópia JSON do Drive ou do aparelho <input id="restore" type="file" accept=".json,application/json"></label>
       </div>
       <div id="archive"></div>
     </section>
@@ -47,26 +50,41 @@
       <h2>Registo fotográfico</h2>
       <p>Associa cada fotografia a um setor e descreve o que documenta.</p>
       <label class="file">Adicionar fotografias <input id="photos" type="file" accept="image/*" multiple></label>
+      <label class="file">Tirar fotografia <input id="camera" type="file" accept="image/*" capture="environment"></label>
       <div id="photoList" class="photo-grid"></div>
+    </section>
+    <section id="fieldwork" hidden>
+      <h1>Operações e mapa</h1>
+      <div id="observations"></div>
+      <h2>Geometrias</h2>
+      <div class="actions">
+        <button type="button" id="addGeometry">Adicionar geometria</button>
+        <button type="button" id="exportKml">Exportar KML</button>
+        <label class="file">Importar KML <input id="importKml" type="file" accept=".kml"></label>
+      </div>
+      <canvas id="map" width="640" height="360" role="img" aria-label="Esboço das geometrias da ocorrência, sem mapa base"></canvas>
+      <div id="geometryList"></div>
     </section>
     <section id="report" hidden>
       <h1>Relatório de supressão</h1>
       <div class="fields" id="reportFields"></div>
       <div class="actions">
         <button type="button" id="saveCase">Arquivar ocorrência</button>
-        <button type="button" id="printReport">Imprimir / guardar PDF</button>
+        <button type="button" id="printReport">Imprimir ficha complementar</button>
       </div>
       <div class="workbook">
-        <h2>Livro de registo Excel</h2>
-        <label class="file">Selecionar modelo ou livro existente (.xlsx) <input id="workbook" type="file" accept=".xlsx"></label>
+        <h2>Modelo de Fogo de Supressão</h2>
+        <label class="file">Selecionar modelo original ou livro existente (.xlsx) <input id="workbook" type="file" accept=".xlsx"></label>
+        <p id="workbookStatus">Seleciona o modelo uma vez para o ter disponível offline.</p>
         <label id="rowPicker" hidden>Registo existente <select id="existingRow"></select></label>
         <div class="actions">
           <button type="button" id="prefill" disabled>Pré-preencher a ficha</button>
-          <button type="button" id="exportExcel" disabled>Gravar cópia preenchida</button>
+          <button type="button" id="exportExcel" disabled>Exportar Excel no modelo de supressão</button>
+          <button type="button" id="exportCsv">Exportar CSV do registo</button>
         </div>
       </div>
     </section>
   </main>
-  <footer>Registos guardados neste dispositivo · <span class="app-version">v1.0.0</span></footer>
+  <footer>Registos guardados neste dispositivo · <span class="app-version">v1.1.0</span></footer>
 </body>
 </html>

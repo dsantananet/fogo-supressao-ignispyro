@@ -36,7 +36,10 @@ const sectorFields = [
   ['activity','Descrição da intervenção','textarea'], ['result','Resultado e observações','textarea']
 ];
 const textFields = [...caseFields, ...reportFields];
-const fresh = () => ({id:key(), sectors:[], photos:[], ...Object.fromEntries(textFields.map(([name]) => [name, '']))});
+const emptyFieldwork = () => Object.fromEntries([...fieldCollections.map(([name]) => name), 'geometries']
+  .map(name => [name, []]));
+const fresh = () => ({id:key(), sectors:[], photos:[], ...emptyFieldwork(),
+  ...Object.fromEntries(textFields.map(([name]) => [name, '']))});
 let active;
 let archive = [];
 let workbookFile;
@@ -72,7 +75,8 @@ function autosave() {
 function field([name, label, type = 'text'], object, changed = autosave) {
   const element = document.createElement('label');
   const input = document.createElement(type === 'textarea' ? 'textarea' : 'input');
-  if (type !== 'textarea') input.type = type;
+  if (type !== 'textarea') input.type = type === 'decimal' ? 'text' : type;
+  if (type === 'decimal') input.inputMode = 'decimal';
   if (type === 'number') { input.min = '0'; input.step = name === 'length' ? 'any' : '1'; }
   input.value = object[name] ?? '';
   input.addEventListener('input', () => { object[name] = input.value; changed(); });
@@ -153,7 +157,18 @@ function renderPhotos() {
     sector.addEventListener('change', () => { photo.sector = sector.value; autosave(); });
     const label = document.createElement('label');
     label.append('Setor da fotografia', sector);
-    row.append(image, label, field(['caption','Legenda'], photo), button('Remover fotografia', () => {
+    row.append(image, label, ...photoFields.map(def => field(def, photo)), button('Associar posição GPS atual', async () => {
+      try {
+        const {latitude, longitude, timestamp} = await currentCoordinates();
+        if (!active.photos.includes(photo)) return;
+        photo.latitude = latitude.toFixed(6);
+        photo.longitude = longitude.toFixed(6);
+        photo.positionTime = new Date(timestamp ?? Date.now()).toISOString();
+        await save();
+        renderPhotos();
+        feedback('Posição atual associada à fotografia.');
+      } catch (error) { feedback(error.message); }
+    }), button('Remover fotografia', () => {
       active.photos = active.photos.filter(item => item.id !== photo.id);
       autosave();
       renderPhotos();
@@ -168,13 +183,15 @@ function render() {
   renderArchive();
   renderSectors();
   renderPhotos();
+  renderObservations();
+  renderGeometries();
 }
 
 function validate() {
   if (!active.occurrence.trim() || !active.date) throw new Error('Indica o número e a data da ocorrência.');
 }
 
-function readPhoto(file) {
+function readPhoto(file, captured) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     const url = URL.createObjectURL(file);
@@ -185,7 +202,8 @@ function readPhoto(file) {
         canvas.width = Math.round(image.width * ratio);
         canvas.height = Math.round(image.height * ratio);
         canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve({id:key(), name:file.name, data:canvas.toDataURL('image/jpeg', .83), sector:'', caption:''});
+        const time = captured ? localDateTime() : '';
+        resolve({id:key(), name:file.name, data:canvas.toDataURL('image/jpeg', .83), sector:'', caption:'', time});
       } catch (error) { reject(error); }
       finally { URL.revokeObjectURL(url); }
     };
@@ -210,10 +228,22 @@ function restoreRecord(record) {
   });
   const photos = record.photos.map(photo => {
     if (!photo || !validPhoto(photo.data)) throw new Error('Fotografia inválida.');
-    return {id:key(), name:String(photo.name ?? ''), sector:String(photo.sector ?? ''),
-      caption:String(photo.caption ?? ''), data:photo.data};
+    return {id:typeof photo.id === 'string' ? photo.id : key(), name:String(photo.name ?? ''),
+      sector:String(photo.sector ?? ''), data:photo.data, positionTime:String(photo.positionTime ?? ''),
+      ...Object.fromEntries(photoFields.map(([name]) => [name, String(photo[name] ?? '')]))};
   });
-  return {id:record.id, ...fields, sectors, photos};
+  const collectionFields = [...fieldCollections.map(([name, , , defs]) => [name, defs]),
+    ['geometries', [...geometryFields, ['type']]]];
+  const collections = Object.fromEntries(collectionFields.map(([name, definitions]) => {
+    const source = record[name] ?? [];
+    if (!Array.isArray(source) || source.some(item => !item || typeof item.id !== 'string')) {
+      throw new Error('Registos de campo inválidos.');
+    }
+    return [name, source.map(item => ({
+      id:item.id, ...Object.fromEntries(definitions.map(([field]) => [field, String(item[field] ?? '')]))
+    }))];
+  }));
+  return {id:record.id, ...fields, sectors, photos, ...collections};
 }
 
 function reportHtml(record) {
@@ -226,7 +256,8 @@ function reportHtml(record) {
     rows(sectorFields.slice(1).map(([id,label]) => [label, sector[id]])) + '</table>').join('');
   const photos = record.photos.filter(photo => validPhoto(photo.data)).map((photo, index) => {
     const sector = record.sectors.find(item => item.id === photo.sector)?.name;
-    const caption = [photo.caption || photo.name, sector].filter(Boolean).join(' · ');
+    const gps = photo.latitude && photo.longitude ? photo.latitude + ', ' + photo.longitude : '';
+    const caption = [photo.caption || photo.name, photo.reference, sector, photo.time, gps].filter(Boolean).join(' · ');
     return '<figure><img src="' + photo.data + '" alt=""><figcaption>Fotografia ' + (index + 1) +
       ' · ' + esc(caption) + '</figcaption></figure>';
   }).join('');
@@ -239,6 +270,7 @@ function reportHtml(record) {
     rows([...caseFields.map(([id,label]) => [label, record[id]]), ['Duração da manobra', duration]]) + '</table>' +
     '<h2>Caracterização e avaliação</h2><table>' +
     rows(reportFields.map(([id,label]) => [label, record[id]])) + '</table>' +
+    fieldworkReport(record, rows) +
     (sectors ? '<h2>Setores</h2>' + sectors : '') +
     (photos ? '<h2>Registo fotográfico</h2>' + photos : '') + '</body></html>';
 }
@@ -268,11 +300,55 @@ function handle(id, event, action) {
   });
 }
 
+function loadWorkbook(file, book) {
+  workbookFile = file;
+  existingRecords = book.records;
+  $('existingRow').replaceChildren(...existingRecords.map((item, index) =>
+    new Option([item.values[2], item.values[3], fromExcelDate(item.values[8]), fromExcelTime(item.values[9])]
+      .filter(Boolean).join(' · '), index)));
+  $('rowPicker').hidden = !existingRecords.length;
+  $('prefill').disabled = !existingRecords.length;
+  $('exportExcel').disabled = false;
+  $('workbookStatus').textContent = 'Disponível offline: ' + file.name;
+}
+
+function filename(suffix) {
+  return 'Fogo-Supressao-' + active.occurrence.trim().replace(/[^a-zA-Z0-9_-]/g, '_') + suffix;
+}
+
+async function readBackup(file) {
+  const backup = JSON.parse(await file.text());
+  if (backup.format !== 'ignispyro-supressao-v1' || !Array.isArray(backup.archive)) throw new Error('Cópia inválida.');
+  return {active:restoreRecord(backup.active), archive:backup.archive.map(restoreRecord)};
+}
+
+async function mergeBackup(backup) {
+  const localRecords = new Map([active, ...archive].map(record => [record.id, JSON.stringify(restoreRecord(record))]));
+  const additions = [];
+  for (const record of [...backup.archive, backup.active]) {
+    if (![record.occurrence, record.location, record.date].some(Boolean)) continue;
+    const content = JSON.stringify(record);
+    if (localRecords.get(record.id) === content) continue;
+    if (localRecords.has(record.id)) {
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
+      const conflictId = 'copia-' + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+      if (localRecords.has(conflictId)) continue;
+      record.id = conflictId;
+    }
+    localRecords.set(record.id, JSON.stringify(record));
+    additions.push(record);
+  }
+  archive.push(...additions);
+  await save();
+  renderArchive();
+  return additions.length;
+}
+
 async function boot() {
   db = await openStorage();
   const local = await storeValue('readonly', store => store.get('project'));
-  active = local?.active ?? fresh();
-  archive = local?.archive ?? [];
+  active = local?.active ? {...emptyFieldwork(), ...local.active} : fresh();
+  archive = (local?.archive ?? []).map(record => ({...emptyFieldwork(), ...record}));
   render();
   document.querySelectorAll('[data-page]').forEach(node =>
     node.addEventListener('click', () => { panel(node.dataset.page); feedback(''); }));
@@ -284,15 +360,52 @@ async function boot() {
     active.sectors.push({id:key(), ...Object.fromEntries(sectorFields.map(([id]) => [id,'']))});
     autosave(); renderSectors(); renderPhotos();
   });
-  handle('photos','change', async e => {
+  async function addPhotos(e) {
     const files = [...e.target.files];
-    if (files.length + active.photos.length > 18) throw new Error('Limite de 18 fotografias por ficha.');
     const destination = active;
-    const photos = await Promise.all(files.map(readPhoto));
-    if (destination !== active) throw new Error('A ficha mudou antes de as fotografias terminarem de carregar.');
-    active.photos.push(...photos);
+    const captured = e.target.id === 'camera';
     e.target.value = '';
+    if (!files.length) return;
+    if (files.length + active.photos.length > 18) throw new Error('Limite de 18 fotografias por ficha.');
+    const photos = await Promise.all(files.map(file => readPhoto(file, captured)));
+    if (destination !== active) throw new Error('A ficha mudou antes de as fotografias terminarem de carregar.');
+    if (photos.length + active.photos.length > 18) throw new Error('Limite de 18 fotografias por ficha.');
+    active.photos.push(...photos);
     await save(); renderPhotos();
+    if (captured) {
+      try {
+        const position = await currentCoordinates();
+        if (!active.photos.includes(photos[0])) return;
+        Object.assign(photos[0], {
+          latitude:position.latitude.toFixed(6), longitude:position.longitude.toFixed(6),
+          positionTime:new Date(position.timestamp ?? Date.now()).toISOString()
+        });
+        await save(); renderPhotos();
+      } catch (error) { feedback('Fotografia guardada sem GPS. ' + error.message); }
+    }
+  }
+  handle('photos','change', addPhotos);
+  handle('camera','change', addPhotos);
+  handle('addGeometry','click', () => {
+    active.geometries.push({id:key(), type:'Point', name:'', coordinates:''});
+    autosave(); renderGeometries();
+  });
+  handle('importKml','change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) throw new Error('Seleciona um KML até 5 MB.');
+    const destination = active;
+    const imported = importGeometries(await file.text());
+    if (destination !== active) throw new Error('A ficha mudou durante a importação.');
+    active.geometries.push(...imported);
+    await save(); renderGeometries();
+    feedback(imported.length + ' geometrias importadas.');
+  });
+  handle('exportKml','click', async () => {
+    validate();
+    if (!active.geometries.length) throw new Error('Adiciona uma geometria.');
+    await saveFile(new Blob([makeKml(active)], {type:'application/vnd.google-earth.kml+xml'}), filename('.kml'));
   });
   handle('saveCase','click', async () => {
     validate();
@@ -303,36 +416,37 @@ async function boot() {
     await save(); renderArchive(); feedback('Ocorrência arquivada.');
   });
   handle('backup','click', async () => {
-    const content = JSON.stringify({format:'ignispyro-supressao-v1', active, archive});
-    await saveFile(new Blob([content], {type:'application/json'}), 'fogo-supressao-copia.json');
-    feedback('Cópia JSON exportada.');
+    const content = JSON.stringify({format:'ignispyro-supressao-v1', savedAt:new Date().toISOString(), active, archive});
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    await saveFile(new Blob([content], {type:'application/json'}), 'Fogo-Supressao-copia-' + stamp + '.json');
+    feedback('Cópia gravada no destino selecionado.');
   });
   handle('restore','change', async e => {
     const file = e.target.files[0];
-    if (!file) return;
-    const backup = JSON.parse(await file.text());
-    if (backup.format !== 'ignispyro-supressao-v1' || !Array.isArray(backup.archive)) throw new Error('Cópia inválida.');
-    const nextActive = restoreRecord(backup.active);
-    const nextArchive = backup.archive.map(restoreRecord);
-    if (!confirm('Substituir a ficha e o histórico locais pela cópia?')) return;
-    active = nextActive; archive = nextArchive; await save(); render();
     e.target.value = '';
+    if (!file) return;
+    const backup = await readBackup(file);
+    if (!confirm('Substituir a ficha e o histórico locais pela cópia?')) return;
+    active = backup.active; archive = backup.archive; await save(); render();
     feedback('Cópia importada.');
   });
-  handle('workbook','change', async e => {
-    workbookFile = undefined; existingRecords = [];
-    $('rowPicker').hidden = true; $('prefill').disabled = true; $('exportExcel').disabled = true;
+  handle('merge','change', async e => {
     const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const backup = await readBackup(file);
+    if (!confirm('Juntar os registos desta cópia ao histórico? As versões diferentes serão guardadas em separado.')) return;
+    const count = await mergeBackup(backup);
+    feedback(count + ' registos acrescentados ao histórico.');
+  });
+  handle('workbook','change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
     if (!file) return;
     const book = await readSuppressionWorkbook(file);
-    workbookFile = file; existingRecords = book.records;
-    $('existingRow').replaceChildren(...existingRecords.map((item, index) =>
-      new Option([item.values[2], item.values[3], fromExcelDate(item.values[8]), fromExcelTime(item.values[9])]
-        .filter(Boolean).join(' · '), index)));
-    $('rowPicker').hidden = !existingRecords.length;
-    $('prefill').disabled = !existingRecords.length;
-    $('exportExcel').disabled = false;
-    feedback('Livro carregado. Escolhe uma linha para pré-preencher ou grava uma cópia com a ficha atual.');
+    await storeValue('readwrite', store => store.put(file, 'workbook'));
+    loadWorkbook(file, book);
+    feedback('Livro disponível offline. Podes pré-preencher a ficha ou exportar o relatório Excel.');
   });
   handle('prefill','click', async () => {
     if (active.occurrence && !confirm('Substituir a ficha em edição pelos dados da linha selecionada?')) return;
@@ -342,10 +456,14 @@ async function boot() {
   handle('exportExcel','click', async () => {
     validate();
     const copy = structuredClone(active);
+    const name = filename('.xlsx');
     const blob = await saveSuppressionWorkbook(workbookFile, copy);
-    const occurrence = copy.occurrence.replace(/[^a-zA-Z0-9_-]/g, '_');
-    await saveFile(blob, 'Fogo-Supressao-' + occurrence + '.xlsx');
+    await saveFile(blob, name);
     feedback('Cópia preenchida gravada.');
+  });
+  handle('exportCsv','click', async () => {
+    validate();
+    await saveFile(new Blob([suppressionCsv(active)], {type:'text/csv;charset=utf-8'}), filename('.csv'));
   });
   handle('printReport','click', async () => {
     validate();
@@ -359,6 +477,13 @@ async function boot() {
     }
   });
   if (!native && 'serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+  try {
+    const file = await storeValue('readonly', store => store.get('workbook'));
+    if (file && !workbookFile) {
+      const book = await readSuppressionWorkbook(file);
+      if (!workbookFile) loadWorkbook(file, book);
+    }
+  } catch (error) { feedback('Volta a selecionar o modelo Excel. ' + error.message); }
 }
 
 boot().catch(() => feedback('O armazenamento local está indisponível. Reabre a aplicação.'));
