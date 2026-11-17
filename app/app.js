@@ -98,6 +98,7 @@ function button(text, click) {
 }
 
 function renderArchive() {
+  renderHistoryTotals();
   $('archive').replaceChildren();
   if (!archive.length) { $('archive').textContent = 'Sem ocorrências arquivadas.'; return; }
   for (const record of archive) {
@@ -122,6 +123,43 @@ function renderArchive() {
     row.append(text, actions);
     $('archive').append(row);
   }
+}
+
+function renderHistoryTotals() {
+  const occurrences = new Set();
+  const manoeuvres = new Map();
+  for (const record of archive) {
+    const occurrence = record.occurrence.trim();
+    if (occurrence) occurrences.add(occurrence);
+    // Copies of the same manoeuvre can differ in their notes without adding operational hours.
+    const match = occurrence ? JSON.stringify([occurrence, record.date, record.start]) : record.id;
+    const duration = operationsDuration(record.start, record.end);
+    if (!manoeuvres.has(match) || manoeuvres.get(match) === '') manoeuvres.set(match, duration);
+  }
+  const durations = [...manoeuvres.values()].filter(Number.isFinite);
+  const minutes = Math.round(durations.reduce((total, duration) => total + duration, 0) * 1440);
+  const hours = Math.floor(minutes / 60);
+  const time = durations.length ? hours + ' h ' + String(minutes % 60).padStart(2, '0') + ' min' : '—';
+  const totals = [
+    ['Fichas arquivadas', archive.length],
+    ['Ocorrências', occurrences.size],
+    ['Manobras', manoeuvres.size],
+    ['Horas de manobra', time, durations.length + ' com início e fim']
+  ];
+  $('historyTotals').replaceChildren(...totals.map(([label, value, detail]) => {
+    const card = document.createElement('div');
+    const term = document.createElement('dt');
+    const amount = document.createElement('dd');
+    term.textContent = label;
+    amount.textContent = value;
+    if (detail) {
+      const note = document.createElement('small');
+      note.textContent = detail;
+      amount.append(note);
+    }
+    card.append(term, amount);
+    return card;
+  }));
 }
 
 function renderSectors() {

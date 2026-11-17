@@ -45,6 +45,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 h1 { font-size: clamp(1.35rem, 5vw, 2rem); margin: 12px 0 18px; }
 h2 { font-size: 1.15rem; margin: 12px 0; }
+.history-totals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.history-totals div { padding: 10px; background: white; border: 1px solid var(--line); border-radius: 8px; }
+.history-totals dt { font-size: .82rem; }
+.history-totals dd { margin: 4px 0 0; font-size: 1.28rem; font-weight: 700; }
+.history-totals small { display: block; font-weight: 400; font-size: .72rem; }
 .fields, .photo-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -79,6 +89,7 @@ textarea { min-height: 78px; resize: vertical; }
 #feedback { color: #7f2330; min-height: 1.6rem; padding-top: 4px; }
 footer { text-align: center; color: #66323a; font-size: .84rem; padding: 18px; }
 @media (max-width: 620px) {
+  .history-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fields, .photo-grid { grid-template-columns: 1fr; }
   nav { gap: 5px; }
   nav button { padding: 8px; font-size: .88rem; }
