@@ -39,6 +39,6 @@ const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
 const [major, minor, patch] = version.split('.').map(Number);
 writeFileSync(gradle, readFileSync(gradle, 'utf8')
   .replace(/dependencies \{(?!\s*implementation 'com.google.android.gms:play-services-auth:)/,
-    match => match + "\n    implementation 'com.google.android.gms:play-services-auth:22.0.0'")
+    match => match + "\n    implementation 'com.google.android.gms:play-services-auth:21.4.0'")
   .replace(/versionCode \d+/, `versionCode ${major * 10000 + minor * 100 + patch}`)
   .replace(/versionName "[^"]+"/, `versionName "${version}"`));
