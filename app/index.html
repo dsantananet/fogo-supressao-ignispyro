@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#811c28">
+  <title>Fogo de Supressão | IgnisPyro</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="zip.js"></script>
+  <script defer src="excel.js"></script>
+  <script defer src="app.js"></script>
+  <script defer src="updates.js"></script>
+</head>
+<body>
+  <header><img src="icon.svg" width="54" height="54" alt=""><div><strong>Fogo de Supressão</strong><small>Made by IgnisPyro</small></div></header>
+  <main>
+    <aside id="androidUpdate" class="update" hidden>
+      <span id="updateStatus" role="status"></span>
+      <button type="button" id="updateButton">Verificar atualizações</button>
+    </aside>
+    <nav aria-label="Secções">
+      <button type="button" aria-current="page" data-page="history">Histórico</button>
+      <button type="button" data-page="case">Ocorrência</button>
+      <button type="button" data-page="sectors">Setores e fotografias</button>
+      <button type="button" data-page="report">Relatório e Excel</button>
+    </nav>
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <section id="history">
+      <h1>Ocorrências arquivadas</h1>
+      <div class="actions">
+        <button type="button" id="newCase">Nova ocorrência</button>
+        <button type="button" id="backup">Exportar cópia JSON</button>
+        <label class="file">Importar cópia JSON <input id="restore" type="file" accept=".json,application/json"></label>
+      </div>
+      <div id="archive"></div>
+    </section>
+    <section id="case" hidden>
+      <h1>Ficha de ocorrência</h1>
+      <div class="fields" id="caseFields"></div>
+    </section>
+    <section id="sectors" hidden>
+      <h1>Setores e fotografias</h1>
+      <button type="button" id="addSector">Adicionar setor</button>
+      <div id="sectorList"></div>
+      <h2>Registo fotográfico</h2>
+      <p>Associa cada fotografia a um setor e descreve o que documenta.</p>
+      <label class="file">Adicionar fotografias <input id="photos" type="file" accept="image/*" multiple></label>
+      <div id="photoList" class="photo-grid"></div>
+    </section>
+    <section id="report" hidden>
+      <h1>Relatório de supressão</h1>
+      <div class="fields" id="reportFields"></div>
+      <div class="actions">
+        <button type="button" id="saveCase">Arquivar ocorrência</button>
+        <button type="button" id="printReport">Imprimir / guardar PDF</button>
+      </div>
+      <div class="workbook">
+        <h2>Livro de registo Excel</h2>
+        <label class="file">Selecionar modelo ou livro existente (.xlsx) <input id="workbook" type="file" accept=".xlsx"></label>
+        <label id="rowPicker" hidden>Registo existente <select id="existingRow"></select></label>
+        <div class="actions">
+          <button type="button" id="prefill" disabled>Pré-preencher a ficha</button>
+          <button type="button" id="exportExcel" disabled>Gravar cópia preenchida</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>Registos guardados neste dispositivo · <span class="app-version">v1.0.0</span></footer>
+</body>
+</html>

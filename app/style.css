@@ -1,0 +1,84 @@
+:root {
+  color: #411820;
+  background: #fbf6f6;
+  font-family: system-ui, sans-serif;
+  --red: #811c28;
+  --line: #e1cbce;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+header {
+  background: #701a26;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px max(16px, calc((100vw - 980px) / 2));
+}
+header img { border-radius: 13px; border: 1px solid #ffffff70; }
+header strong, header small { display: block; }
+header strong { font-size: 1.25rem; }
+header small { color: #ffdfdc; margin-top: 2px; }
+main { max-width: 1012px; margin: auto; padding: 16px; }
+nav, .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+nav { border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+button, .file { font: inherit; }
+button {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  color: var(--red);
+  background: white;
+  font-weight: 700;
+}
+button[aria-current], #saveCase, #newCase, #printReport {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
+}
+button:disabled { cursor: default; opacity: .55; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid #d85666;
+  outline-offset: 2px;
+}
+h1 { font-size: clamp(1.35rem, 5vw, 2rem); margin: 12px 0 18px; }
+h2 { font-size: 1.15rem; margin: 12px 0; }
+.fields, .photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+label { display: grid; gap: 5px; font-size: .91rem; font-weight: 650; }
+input, textarea, select {
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 9px;
+  color: inherit;
+  font: inherit;
+}
+textarea { min-height: 78px; resize: vertical; }
+.file { padding: 8px; }
+.file input { padding: 5px 0; border: 0; background: transparent; }
+.actions { margin: 10px 0; }
+.archive-row, .sector, .photo, .workbook, .update {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+.archive-row, .update { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.photo img { width: 100%; height: 150px; object-fit: contain; background: #faf1f1; }
+.photo label, .photo button, .sector button { margin-top: 8px; }
+#feedback { color: #7f2330; min-height: 1.6rem; padding-top: 4px; }
+footer { text-align: center; color: #66323a; font-size: .84rem; padding: 18px; }
+@media (max-width: 620px) {
+  .fields, .photo-grid { grid-template-columns: 1fr; }
+  nav { gap: 5px; }
+  nav button { padding: 8px; font-size: .88rem; }
+}

@@ -1,0 +1,11 @@
+{
+  "product": "Fogo de Supressão",
+  "brand": "Made by IgnisPyro",
+  "version": "1.0.0",
+  "colors": {
+    "red": "#811c28",
+    "foreground": "#411820",
+    "background": "#fbf6f6",
+    "accent": "#e56161"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "pt.ignispyro.fogosupressao",
+  "appName": "Fogo de Supressão",
+  "webDir": "app",
+  "server": {
+    "androidScheme": "https"
+  }
+}

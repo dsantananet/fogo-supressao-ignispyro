@@ -1,0 +1,10 @@
+{
+  "id": "./",
+  "name": "Fogo de Supressão — Made by IgnisPyro",
+  "short_name": "Supressão",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fbf6f6",
+  "theme_color": "#811c28",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}
