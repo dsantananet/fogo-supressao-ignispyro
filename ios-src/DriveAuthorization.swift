@@ -2,7 +2,9 @@
 public class SuppressionDriveAuthorization: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "SuppressionDriveAuthorization"
     public let jsName = "DriveAuthorization"
-    public let pluginMethods = [CAPPluginMethod(name: "authorize", returnType: CAPPluginReturnPromise)]
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "authorize", returnType: CAPPluginReturnPromise)
+    ]
     private let scope = "https://www.googleapis.com/auth/drive.appdata"
 
     @objc func authorize(_ call: CAPPluginCall) {
