@@ -12,7 +12,12 @@ const panel = page => {
 };
 const feedback = message => { $('feedback').textContent = message; };
 const native = globalThis.Capacitor?.getPlatform() === 'android';
-const documents = native ? globalThis.Capacitor.registerPlugin('DocumentFiles') : null;
+function androidPlugin(name, methods) {
+  const bridge = globalThis.Capacitor;
+  return Object.fromEntries(methods.map(method => [method, options =>
+    bridge.nativePromise(name, method, options ?? {})]));
+}
+const documents = native ? androidPlugin('DocumentFiles', ['save', 'print', 'locate']) : null;
 const key = () => crypto.randomUUID();
 const caseFields = [
   ['occurrence','Número de ocorrência'], ['location','Local'], ['parish','Freguesia'],

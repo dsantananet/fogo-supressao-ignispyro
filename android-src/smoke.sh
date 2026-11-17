@@ -8,7 +8,7 @@ adb shell am start -W -n "$package/.MainActivity"
 for attempt in {1..12}; do
   adb shell uiautomator dump /sdcard/fogo-tecnico-ui.xml || continue
   adb pull /sdcard/fogo-tecnico-ui.xml "$RUNNER_TEMP/fogo-tecnico-ui.xml" || { sleep 2; continue; }
-  if grep -qi 'Ocorrências arquivadas\|Relatório de supressão\|Fogo de Supressão' "$RUNNER_TEMP/fogo-tecnico-ui.xml"; then
+  if grep -qi 'Sem ocorrências arquivadas' "$RUNNER_TEMP/fogo-tecnico-ui.xml"; then
     adb shell pidof "$package"
     echo 'Suppression UI rendered on Android'
     exit 0
