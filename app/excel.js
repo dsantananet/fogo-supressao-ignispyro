@@ -172,11 +172,17 @@ async function saveSuppressionWorkbook(file, record) {
     }
     const item = book.xml.createElementNS(sheetNS, 'c');
     const previous = book.cell(row, index);
-    if (previous?.getElementsByTagNameNS(sheetNS, 'f').length) return;
+    const previousFormula = previous?.getElementsByTagNameNS(sheetNS, 'f')[0];
+    if (previousFormula && index !== 11) return;
     item.setAttribute('r', column(index) + target);
     const style = previous?.getAttribute('s') ?? book.cell(styleRow, index)?.getAttribute('s');
     if (style) item.setAttribute('s', style);
     if (typeof value === 'number') {
+      if (index === 11 && previousFormula) {
+        const formula = book.xml.createElementNS(sheetNS, 'f');
+        formula.textContent = 'MOD(K' + target + '-J' + target + ',1)';
+        item.append(formula);
+      }
       const node = book.xml.createElementNS(sheetNS, 'v');
       node.textContent = String(value);
       item.append(node);
