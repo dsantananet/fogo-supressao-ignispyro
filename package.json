@@ -1,6 +1,6 @@
 {
   "name": "fogo-supressao-ignispyro",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "scripts": {
     "android": "cap sync android"

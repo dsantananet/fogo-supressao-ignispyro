@@ -1,9 +1,11 @@
 (() => {
   const bridge = globalThis.Capacitor;
   const control = document.getElementById('androidUpdate');
-  if (bridge?.getPlatform() !== 'android') return;
+  const android = bridge?.getPlatform() === 'android';
+  const windows = location.origin === 'http://127.0.0.1:49773';
+  if (!android && !windows) return;
 
-  const releases = androidPlugin('ReleaseUpdates', ['version', 'download']);
+  const releases = android ? androidPlugin('ReleaseUpdates', ['version', 'download']) : null;
   const repo = 'dsantananet/fogo-supressao-ignispyro';
   const versionPattern = /^v?(\d+)\.(\d+)\.(\d+)$/;
   const versionLabel = document.querySelector('.app-version');
@@ -26,23 +28,24 @@
     if (button.disabled || (!manual && Date.now() < nextCheck)) return;
     button.disabled = true;
     try {
-      const { version } = await releases.version();
-      versionLabel.textContent = 'v' + version;
+      const version = releases ? (await releases.version()).version : versionLabel.textContent.trim();
+      versionLabel.textContent = 'v' + version.replace(/^v/, '');
       const response = await fetch('https://api.github.com/repos/' + repo + '/releases/latest', {
         signal: AbortSignal.timeout(8000)
       });
       if (!response.ok) throw new Error('GitHub indisponível');
       const release = await response.json();
       const tag = release.tag_name;
-      const apk = 'Fogo-Supressao-IgnisPyro-' + tag + '.apk';
-      const url = 'https://github.com/' + repo + '/releases/download/' + tag + '/' + apk;
+      const filename = android ? 'Fogo-Supressao-IgnisPyro-' + tag + '.apk' :
+        'Fogo-Supressao-IgnisPyro-Windows-' + tag + '.exe';
+      const url = 'https://github.com/' + repo + '/releases/download/' + tag + '/' + filename;
       available = compareVersions(tag, version) && release.assets?.some(asset =>
-        asset.name === apk && asset.browser_download_url === url
-      ) ? tag : undefined;
+        asset.name === filename && asset.browser_download_url === url
+      ) ? {tag, url} : undefined;
       nextCheck = Date.now() + 60 * 60 * 1000;
-      feedback.textContent = available ? 'Nova versão disponível: ' + available :
+      feedback.textContent = available ? 'Nova versão disponível: ' + available.tag :
         manual ? 'Tens a versão mais recente.' : '';
-      button.textContent = available ? 'Descarregar ' + available : 'Verificar atualizações';
+      button.textContent = available ? 'Descarregar ' + available.tag : 'Verificar atualizações';
     } catch {
       nextCheck = Date.now() + 5 * 60 * 1000;
       if (manual) feedback.textContent = 'Não foi possível verificar. Tenta novamente com ligação à Internet.';
@@ -55,7 +58,8 @@
   button.addEventListener('click', async () => {
     if (!available) return checkForUpdate(true);
     try {
-      await releases.download({ tag: available });
+      if (releases) await releases.download({ tag: available.tag });
+      else window.location.assign(available.url);
     } catch {
       feedback.textContent = 'Não foi possível abrir o download.';
     }

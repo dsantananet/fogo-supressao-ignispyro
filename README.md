@@ -16,3 +16,5 @@ Consulta [BUILD_ANDROID.md](BUILD_ANDROID.md) para compilar.
 Abre o executável portátil disponível em Releases e mantém a janela aberta enquanto usas a app no navegador. A aplicação corre neste computador em `http://127.0.0.1:49773/`, incluindo quando estás offline. Usa o mesmo perfil do navegador para reencontrar o histórico. Em **Histórico**, importa uma cópia JSON privada para usar registos já existentes.
 
 Para compilar, executa `windows-src/build.ps1 -OutputDirectory <pasta>` em Windows com Git e .NET Framework 4.8.
+
+Em Android e Windows, a app verifica se existe uma versão mais recente em Releases. A instalação da nova versão é confirmada pelo utilizador. Cada tag de versão compila e testa o APK assinado e o executável Windows antes de publicar ambos.
