@@ -17,14 +17,14 @@ jobs:
       - name: Prepare the Xcode project
         run: |
           npm install --no-save --no-audit --no-fund '@capacitor/ios@^7.4.0'
-          npx cap add ios --packagemanager SPM
+          npx cap add ios
           /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string Usar GPS na ficha e nas fotografias." ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string Fotografar a operação e associar a imagem à ficha." ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string Associar uma fotografia existente à ficha." ios/App/App/Info.plist
       - name: Build for iPhone and iPad Simulator
         run: |
           version="$(node -p 'require("./package.json").version')"
-          xcodebuild -project ios/App/App.xcodeproj -scheme App \
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App \
             -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/ignispyro-ios" CODE_SIGNING_ALLOWED=NO MARKETING_VERSION="$version" build
       - name: Package simulator app
