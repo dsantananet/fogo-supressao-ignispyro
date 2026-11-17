@@ -394,7 +394,6 @@ async function boot() {
   active = local?.active ? {...emptyFieldwork(), ...local.active} : fresh();
   archive = (local?.archive ?? []).map(record => ({...emptyFieldwork(), ...record}));
   render();
-  document.dispatchEvent(new Event('storage-ready'));
   document.querySelectorAll('[data-page]').forEach(node =>
     node.addEventListener('click', () => { panel(node.dataset.page); feedback(''); }));
   handle('newCase','click', () => {
@@ -531,4 +530,7 @@ async function boot() {
   } catch (error) { feedback('Volta a selecionar o modelo Excel. ' + error.message); }
 }
 
-boot().catch(() => feedback('O armazenamento local está indisponível. Reabre a aplicação.'));
+const appReady = boot().then(() => true).catch(() => {
+  feedback('O armazenamento local está indisponível. Reabre a aplicação.');
+  return false;
+});

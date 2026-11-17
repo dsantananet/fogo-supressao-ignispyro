@@ -136,7 +136,8 @@
     });
   }
 
-  document.addEventListener('storage-ready', async () => {
+  appReady.then(async ready => {
+    if (!ready) return;
     $('driveControls').hidden = false;
     preferences = await storeValue('readonly', store => store.get('drive')) ?? {device:key(), seen:{}};
     $('driveDisconnect').hidden = !preferences.enabled;
@@ -164,5 +165,5 @@
     window.addEventListener('online', () => run());
     setInterval(run, 120000);
     run();
-  }, {once:true});
+  }).catch(() => status('Não foi possível carregar a configuração local do Drive.'));
 })();
