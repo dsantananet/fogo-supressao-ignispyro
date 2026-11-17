@@ -11,4 +11,4 @@ A ligação só inicia após o utilizador escolher **Ligar Google Drive**. A app
 3. Cria um cliente Web no mesmo projeto para a origem HTTPS da app e a origem local do lançador Windows. Define apenas o ID público em `app/drive-config.js`.
 4. Autoriza uma conta de teste e confirma a sincronização entre dois aparelhos com fichas fictícias. Publica a configuração OAuth para utilizadores externos antes de disponibilizar os instaladores com a ligação ativa.
 
-A versão para iPhone/iPad usa a app no Safari. A compilação iOS nativa precisa de um cliente iOS próprio e da integração nativa de autorização antes de oferecer esta ligação.
+O Safari usa o cliente Web. A compilação iOS nativa instala Google Sign-In e configura o cliente iOS com o identificador `pt.ignispyro.fogosupressao`. Para distribuição num aparelho físico é necessária a assinatura Apple.

@@ -18,6 +18,7 @@ jobs:
         run: |
           npm install --no-save --no-audit --no-fund '@capacitor/ios@^7.4.0'
           npx cap add ios
+          node ios-src/prepare.mjs
           /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string Usar GPS na ficha e nas fotografias." ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string Fotografar a operação e associar a imagem à ficha." ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string Associar uma fotografia existente à ficha." ios/App/App/Info.plist

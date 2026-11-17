@@ -1,17 +1,19 @@
 'use strict';
 
 (() => {
-  const android = native && suppressionDriveConfig.android;
-  const web = !globalThis.Capacitor?.isNativePlatform?.() &&
+  const platform = globalThis.Capacitor?.getPlatform?.();
+  const nativeDrive = (native && suppressionDriveConfig.android) ||
+    (platform === 'ios' && suppressionDriveConfig.ios);
+  const web = (!platform || platform === 'web') &&
     /\.apps\.googleusercontent\.com$/.test(suppressionDriveConfig.webClientId);
-  if (!android && !web) return;
+  if (!nativeDrive && !web) return;
 
   const scope = 'https://www.googleapis.com/auth/drive.appdata';
   const endpoint = 'https://www.googleapis.com/drive/v3/';
   const format = 'ignispyro-supressao-drive-v1';
   const name = 'ignispyro-supressao-historico.json';
   const status = message => { $('driveStatus').textContent = message; };
-  const authorization = android ? androidPlugin('DriveAuthorization', ['authorize']) : null;
+  const authorization = nativeDrive ? androidPlugin('DriveAuthorization', ['authorize']) : null;
   let preferences;
   let browserToken;
   let pending;
@@ -78,7 +80,7 @@
 
   async function synchronize(interactive) {
     if (!interactive && (!preferences.enabled || !navigator.onLine)) return;
-    const token = android ? (await authorization.authorize({interactive})).accessToken :
+    const token = authorization ? (await authorization.authorize({interactive})).accessToken :
       interactive ? await browserAuthorization() :
         browserToken?.until > Date.now() + 30000 ? browserToken.value : null;
     if (!token) { status('Volta a ligar ao Google para retomar a sincronização.'); return; }
