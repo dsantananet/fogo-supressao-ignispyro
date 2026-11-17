@@ -18,3 +18,9 @@ Abre o executável portátil disponível em Releases e mantém a janela aberta e
 Para compilar, executa `windows-src/build.ps1 -OutputDirectory <pasta>` em Windows com Git e .NET Framework 4.8.
 
 Em Android e Windows, a app verifica se existe uma versão mais recente em Releases. A instalação da nova versão é confirmada pelo utilizador. Cada tag de versão compila e testa o APK assinado e o executável Windows antes de publicar ambos.
+
+## iPhone e iPad
+
+Abre a [app web](https://dsantananet.github.io/fogo-supressao-ignispyro/) no Safari e usa **Partilhar → Adicionar ao ecrã principal**. Após a primeira abertura, a app guarda os ficheiros necessários para trabalhar offline. Importa o histórico e o modelo na app, usando os ficheiros privados.
+
+O workflow iOS compila a versão de simulador. Para instalar o binário nativo num iPhone ou iPad físico, abre o projeto Capacitor em Xcode e utiliza uma equipa Apple com assinatura e provisionamento para o aparelho ou TestFlight.

@@ -24,6 +24,12 @@ internal static class Launcher
 
     private static int Main(string[] args)
     {
+        if (Array.IndexOf(args, "--self-test") >= 0)
+        {
+            LoadAssets();
+            return Assets.ContainsKey("/index.html") && Assets.ContainsKey("/app.js") &&
+                Assets.ContainsKey("/updates.js") && Assets.ContainsKey("/fieldwork.js") ? 0 : 1;
+        }
         using (var mutex = new Mutex(false, "Local\\IgnisPyroFogoSupressao"))
         {
             if (!mutex.WaitOne(0))
