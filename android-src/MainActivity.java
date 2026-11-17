@@ -33,6 +33,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle state) {
         registerPlugin(DocumentFiles.class);
         registerPlugin(ReleaseUpdates.class);
+        registerPlugin(DriveAuthorization.class);
         super.onCreate(state);
     }
 

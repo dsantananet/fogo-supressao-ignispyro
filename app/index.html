@@ -12,6 +12,8 @@
   <script defer src="excel.js"></script>
   <script defer src="fieldwork.js"></script>
   <script defer src="app.js"></script>
+  <script defer src="drive-config.js"></script>
+  <script defer src="drive-sync.js"></script>
   <script defer src="updates.js"></script>
 </head>
 <body>
@@ -32,6 +34,11 @@
     <section id="history">
       <h1>Ocorrências arquivadas</h1>
       <dl id="historyTotals" class="history-totals" aria-label="Resumo do histórico"></dl>
+      <div id="driveControls" class="actions" hidden>
+        <button id="driveConnect" type="button">Ligar Google Drive</button>
+        <button id="driveDisconnect" type="button" hidden>Pausar sincronização</button>
+        <span id="driveStatus" role="status"></span>
+      </div>
       <div class="actions">
         <button type="button" id="newCase">Nova ocorrência</button>
         <button type="button" id="backup">Guardar cópia no Drive ou no aparelho</button>
@@ -86,6 +93,6 @@
       </div>
     </section>
   </main>
-  <footer>Registos guardados neste dispositivo · <span class="app-version">v1.1.4</span></footer>
+  <footer>Registos guardados neste dispositivo · <span class="app-version">v1.2.0</span></footer>
 </body>
 </html>

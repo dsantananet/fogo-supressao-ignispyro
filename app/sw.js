@@ -1,6 +1,6 @@
-const CACHE = 'ignispyro-supressao-v1.1.4';
+const CACHE = 'ignispyro-supressao-v1.2.0';
 const ASSETS = ['./', './index.html', './style.css', './icon.svg', './manifest.webmanifest',
-  './zip.js', './excel.js', './fieldwork.js', './app.js', './updates.js'];
+  './zip.js', './excel.js', './fieldwork.js', './app.js', './drive-config.js', './drive-sync.js', './updates.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
 });

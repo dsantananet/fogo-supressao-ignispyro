@@ -98,6 +98,7 @@ function button(text, click) {
 }
 
 function renderArchive() {
+  document.dispatchEvent(new Event('archive-changed'));
   renderHistoryTotals();
   $('archive').replaceChildren();
   if (!archive.length) { $('archive').textContent = 'Sem ocorrências arquivadas.'; return; }
@@ -393,6 +394,7 @@ async function boot() {
   active = local?.active ? {...emptyFieldwork(), ...local.active} : fresh();
   archive = (local?.archive ?? []).map(record => ({...emptyFieldwork(), ...record}));
   render();
+  document.dispatchEvent(new Event('storage-ready'));
   document.querySelectorAll('[data-page]').forEach(node =>
     node.addEventListener('click', () => { panel(node.dataset.page); feedback(''); }));
   handle('newCase','click', () => {
